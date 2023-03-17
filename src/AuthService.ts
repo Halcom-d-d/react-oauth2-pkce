@@ -239,7 +239,18 @@ export class AuthService<TIDToken = JWTIDToken> {
       body: toUrlEncoded(payload)
     })
     this.removeItem('pkce')
-    let json = await response.json()
+    let json;
+    try {
+      json = await response.json()
+    } catch (error) {
+      json = JSON.stringify({   
+        id_token: 'none',
+        access_token: 'hidden',
+        refresh_token: 'hidden',
+        expires_in: 30,
+        token_type: 'JWT'
+      });
+    }
     if (isRefresh && !json.refresh_token) {
       json.refresh_token = payload.refresh_token
     }
