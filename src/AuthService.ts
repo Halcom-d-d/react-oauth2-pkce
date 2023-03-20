@@ -22,10 +22,10 @@ export interface AuthServiceProps {
 }
 
 export interface AuthTokens {
-  id_token: string
+  id_token?: string
   access_token: string
-  refresh_token: string
-  expires_in: number
+  refresh_token?: string
+  expires_in?: number
   expires_at?: number // calculated on login
   token_type: string
 }
@@ -70,11 +70,11 @@ export class AuthService<TIDToken = JWTIDToken> {
     }
   }
 
-  getUser(): {} {
+  getUser(): TIDToken | {} {
     const t = this.getAuthTokens()
     if (null === t) return {}
-    const decoded = jwtDecode(t.id_token) as TIDToken
-    return decoded
+    const decoded = (t.id_token) ? jwtDecode(t.id_token) as TIDToken : {}
+    return decoded;
   }
 
   getCodeFromLocation(location: Location): string | null {
@@ -129,7 +129,7 @@ export class AuthService<TIDToken = JWTIDToken> {
   setAuthTokens(auth: AuthTokens): void {
     const { refreshSlack = 5 } = this.props
     const now = new Date().getTime()
-    auth.expires_at = now + (auth.expires_in + refreshSlack) * 1000
+    auth.expires_at = now + (auth.expires_in || 86400  + refreshSlack) * 1000
     window.localStorage.setItem('auth', JSON.stringify(auth))
   }
 
@@ -244,11 +244,10 @@ export class AuthService<TIDToken = JWTIDToken> {
       json = await response.json()
     } catch (error) {
       json = JSON.stringify({   
-        id_token: 'none',
         access_token: 'hidden',
         refresh_token: 'hidden',
         expires_in: 30,
-        token_type: 'JWT'
+        token_type: 'Bearer'
       });
     }
     if (isRefresh && !json.refresh_token) {
@@ -271,7 +270,7 @@ export class AuthService<TIDToken = JWTIDToken> {
           if (!expiresAt) return
           const now = new Date().getTime()
           const timeout = expiresAt - now
-          if (timeout > 0) {
+          if ((timeout > 0) && newRefreshToken) {
             this.armRefreshTimer(newRefreshToken, timeout)
           } else {
             this.removeItem('auth')
