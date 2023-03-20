@@ -243,12 +243,12 @@ export class AuthService<TIDToken = JWTIDToken> {
     try {
       json = await response.json()
     } catch (error) {
-      json = JSON.stringify({   
+      json = {   
         access_token: 'hidden',
         refresh_token: 'hidden',
         expires_in: 30,
         token_type: 'Bearer'
-      });
+      };
     }
     if (isRefresh && !json.refresh_token) {
       json.refresh_token = payload.refresh_token
