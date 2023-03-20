@@ -242,20 +242,15 @@ export class AuthService<TIDToken = JWTIDToken> {
     let json;
     try {
       json = await response.json()
+      if (isRefresh && !json.refresh_token) {
+        json.refresh_token = payload.refresh_token
+      }
+      this.setAuthTokens(json as AuthTokens)
+      if (autoRefresh) {
+        this.startTimer()
+      }
     } catch (error) {
-      json = {   
-        access_token: 'hidden',
-        refresh_token: 'hidden',
-        expires_in: 30,
-        token_type: 'Bearer'
-      };
-    }
-    if (isRefresh && !json.refresh_token) {
-      json.refresh_token = payload.refresh_token
-    }
-    this.setAuthTokens(json as AuthTokens)
-    if (autoRefresh) {
-      this.startTimer()
+      console.log(error);
     }
     return this.getAuthTokens()
   }
